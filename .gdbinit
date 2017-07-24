@@ -1284,8 +1284,23 @@ class Registers(Dashboard.Module):
             styled_value = ansi(value.ljust(max_value), value_style)
             partial.append(styled_name + ' ' + styled_value)
         out = []
-        for i in range(0, len(partial), per_line):
-            out.append(' '.join(partial[i:i + per_line]).rstrip())
+        # compute bucket sizes
+        common = int(len(partial) / per_line)
+        buckets = [common] * per_line
+        rest = len(partial) - common * per_line
+        for i in range(rest):
+            buckets[i] += 1
+        # fill buckets
+        for i in range(len(buckets)):
+            n = buckets[i]
+            buckets[i] = partial[:n]
+            partial = partial[n:]
+        # print registers lines
+        for line in range(len(buckets[0])):
+            columns = (buckets[column][line]
+                       for column in range(per_line)
+                       if line < len(buckets[column]))
+            out.append(' '.join(columns).rstrip())
         return out
 
     @staticmethod
